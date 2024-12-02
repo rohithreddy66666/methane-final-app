@@ -1,0 +1,231 @@
+<!-- Floating Chat Widget -->
+<div id="floating-chat">
+    <div class="chat-button" onclick="toggleChat()">
+        <i class="fas fa-comments"></i>
+    </div>
+</div>
+
+<div id="chat-window">
+    <div class="chat-header">
+        <h3>Methane Analysis Assistant</h3>
+        <div class="close-chat" onclick="toggleChat()">
+            <i class="fas fa-times"></i>
+        </div>
+    </div>
+    <div id="chat-messages"></div>
+    <div class="chat-input-container">
+        <form id="chat-form" class="chat-form" onsubmit="handleChatSubmit(event)">
+            <input type="text" id="chat-input" class="chat-input" placeholder="Ask about methane analysis...">
+            <button type="submit" class="button">Send</button>
+        </form>
+    </div>
+</div>
+
+<!-- Chat Styles -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    #floating-chat {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 1000;
+    }
+
+    .chat-button {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #b1ddab;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+    }
+
+    .chat-button:hover {
+        transform: scale(1.1);
+        background: #a1cd9b;
+    }
+
+    .chat-button i {
+        color: white;
+        font-size: 24px;
+    }
+
+    #chat-window {
+        position: fixed;
+        bottom: 100px;
+        right: 30px;
+        width: 350px;
+        height: 500px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+        display: none;
+        flex-direction: column;
+        z-index: 1000;
+    }
+
+    .chat-header {
+        padding: 15px;
+        background: #b1ddab;
+        color: white;
+        border-radius: 12px 12px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .close-chat {
+        cursor: pointer;
+        padding: 5px;
+    }
+
+    #chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+        background: #f8f9fa;
+    }
+
+    .chat-input-container {
+        padding: 15px;
+        border-top: 1px solid #eee;
+        background: white;
+        border-radius: 0 0 12px 12px;
+    }
+
+    .chat-form {
+        display: flex;
+        gap: 10px;
+    }
+
+    .chat-input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .message {
+        margin-bottom: 10px;
+        display: flex;
+        align-items: flex-start;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .user-message {
+        flex-direction: row-reverse;
+    }
+
+    .message-content {
+        max-width: 80%;
+        padding: 10px;
+        border-radius: 8px;
+        background: #e9ecef;
+    }
+
+    .user-message .message-content {
+        background: #b1ddab;
+        color: white;
+    }
+
+    .bot-message .message-content {
+        background: #f8f9fa;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    .chat-button.new-message {
+        animation: bounce 1s infinite;
+    }
+</style>
+
+<!-- Chat JavaScript -->
+<script>
+    (function() {
+        let isChatOpen = false;
+
+        window.toggleChat = function() {
+            const chatWindow = document.getElementById('chat-window');
+            const chatButton = document.querySelector('.chat-button');
+            isChatOpen = !isChatOpen;
+            chatWindow.style.display = isChatOpen ? 'flex' : 'none';
+            chatButton.classList.remove('new-message');
+            
+            if (isChatOpen && !chatWindow.hasAttribute('data-initialized')) {
+                addMessage("Hello! I'm your Methane Analysis Assistant. How can I help you today?", false);
+                chatWindow.setAttribute('data-initialized', 'true');
+            }
+        }
+
+        window.addMessage = function(content, isUser) {
+            const messagesDiv = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            messageDiv.innerHTML = `
+                <div class="message-content">${content}</div>
+            `;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        window.handleChatSubmit = async function(event) {
+            event.preventDefault();
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Disable input during processing
+            input.disabled = true;
+            
+            try {
+                // Add user message
+                addMessage(message, true);
+                input.value = '';
+                
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    addMessage(data.response, false);
+                } else {
+                    addMessage('Sorry, I encountered an error. Please try again.', false);
+                }
+            } catch (error) {
+                console.error('Chat error:', error);
+                addMessage('Sorry, I encountered an error. Please try again.', false);
+            } finally {
+                // Re-enable input
+                input.disabled = false;
+                input.focus();
+            }
+        }
+
+        window.notifyNewMessage = function() {
+            if (!isChatOpen) {
+                const chatButton = document.querySelector('.chat-button');
+                chatButton.classList.add('new-message');
+            }
+        }
+    })();
+</script>
