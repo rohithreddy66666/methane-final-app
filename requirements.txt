@@ -1,0 +1,14 @@
+flask
+earthaccess
+numpy
+matplotlib
+pandas
+georeader
+omegaconf
+pytorch-lightning
+torch
+plotly
+nixtla
+openai
+dotenv
+logging
