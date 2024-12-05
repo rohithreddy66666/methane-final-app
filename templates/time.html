@@ -15,14 +15,14 @@
 <style>
     #conclusionSection {
         margin-top: 2rem;
-        padding: 1.5rem;
+        padding: 4rem;
         background: white;
         border-radius: 4px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     #conclusionText {
-        line-height: 1.6;
+        line-height: 2.6;
     }
 
     #conclusionText .error {
@@ -70,6 +70,135 @@
         100% {
             content: "...";
         }
+    }
+
+    .conclusion-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        margin-top: 2rem;
+        overflow: hidden;
+        border: 1px solid rgba(177, 221, 171, 0.3);
+    }
+
+    .conclusion-title {
+        background: #f8f9fa;
+        color: #2c3e50;
+        padding: 1rem 1.5rem;
+        margin: 0;
+        border-bottom: 2px solid rgba(177, 221, 171, 0.2);
+        font-size: 1.3rem;
+    }
+
+    .conclusion-content {
+        padding: 1.5rem;
+        line-height: 1.6;
+    }
+
+    /* Loader Styles */
+    .conclusion-loader {
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .conclusion-processing-text {
+        color: #666;
+        font-size: 1.1rem;
+        margin-top: 1rem;
+    }
+
+    /* Flashing Dot Animation */
+    .dot-flashing {
+        position: relative;
+        width: 12px;
+        height: 12px;
+        border-radius: 6px;
+        background-color: #b1ddab;
+        color: #b1ddab;
+        animation: dot-flashing 1s infinite linear alternate;
+        animation-delay: .5s;
+        margin: 0 auto;
+    }
+
+    .dot-flashing::before,
+    .dot-flashing::after {
+        content: '';
+        display: inline-block;
+        position: absolute;
+        top: 0;
+    }
+
+    .dot-flashing::before {
+        left: -20px;
+        width: 12px;
+        height: 12px;
+        border-radius: 6px;
+        background-color: #b1ddab;
+        color: #b1ddab;
+        animation: dot-flashing 1s infinite alternate;
+        animation-delay: 0s;
+    }
+
+    .dot-flashing::after {
+        left: 20px;
+        width: 12px;
+        height: 12px;
+        border-radius: 6px;
+        background-color: #b1ddab;
+        color: #b1ddab;
+        animation: dot-flashing 1s infinite alternate;
+        animation-delay: 1s;
+    }
+
+    @keyframes dot-flashing {
+        0% {
+            background-color: #b1ddab;
+        }
+
+        50%,
+        100% {
+            background-color: rgba(177, 221, 171, 0.2);
+        }
+    }
+
+    /* Follow-up dots animation */
+    .dot-follow {
+        opacity: 0;
+        animation: dot-appearing 1.5s infinite;
+    }
+
+    .dot-follow:nth-child(2) {
+        animation-delay: 0.25s;
+    }
+
+    .dot-follow:nth-child(3) {
+        animation-delay: 0.5s;
+    }
+
+    @keyframes dot-appearing {
+
+        0%,
+        100% {
+            opacity: 0;
+        }
+
+        50% {
+            opacity: 1;
+        }
+    }
+
+    /* Result text styles */
+    #conclusionText p {
+        margin: 0;
+        color: #2c3e50;
+    }
+
+    #conclusionText .error {
+        color: #ff3860;
+        background: #fff5f5;
+        padding: 1rem;
+        border-radius: 4px;
+        border-left: 4px solid #ff3860;
     }
 </style>
 
@@ -131,42 +260,54 @@
 
                                     <button id="analyze-button" disabled class="button">Analyze Selected Area</button>
                                     <!-- New Loader with same style as methane.html -->
-<div class="methane-process-overlay" id="loader" style="display: none;">
-    <div class="methane-process-modal">
-        <div class="methane-process-content">
-            <!-- Bouncing Dots Loader -->
-            <div class="methane-loading-dots">
-                <div class="dot dot1"></div>
-                <div class="dot dot2"></div>
-                <div class="dot dot3"></div>
-            </div>
+                                    <div class="methane-process-overlay" id="loader" style="display: none;">
+                                        <div class="methane-process-modal">
+                                            <div class="methane-process-content">
+                                                <!-- Bouncing Dots Loader -->
+                                                <div class="methane-loading-dots">
+                                                    <div class="dot dot1"></div>
+                                                    <div class="dot dot2"></div>
+                                                    <div class="dot dot3"></div>
+                                                </div>
 
-            <h2 class="methane-process-title">ANALYZING TIME SERIES DATA</h2>
-            <p class="methane-process-text">Our models are processing methane concentrations and generating forecasts...</p>
+                                                <h2 class="methane-process-title">ANALYZING TIME SERIES DATA</h2>
+                                                <p class="methane-process-text">Our models are processing methane
+                                                    concentrations and generating forecasts...</p>
 
-            <!-- Simple Progress Bar -->
-            <div class="methane-process-status">
-                <div class="methane-progress-bar">
-                    <div class="methane-progress-fill"></div>
-                </div>
-                <p class="methane-process-message">Processing...Please don't close this window</p>
-            </div>
-        </div>
-    </div>
-</div>
+                                                <!-- Simple Progress Bar -->
+                                                <div class="methane-process-status">
+                                                    <div class="methane-progress-bar">
+                                                        <div class="methane-progress-fill"></div>
+                                                    </div>
+                                                    <p class="methane-process-message">Processing...Please don't close
+                                                        this window</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     <div id="process-status"></div>
                                     <div id="results"></div>
                                     <div id="plot"></div>
-                                    <div id="conclusionSection" class="box" style="display: none;">
-                                        <h3>Analysis Conclusion</h3>
-                                        <div id="conclusionLoader" class="section" style="display: none;">
-                                            <p>Analyzing data... Please wait</p>
+                                    <div id="conclusionSection" class="conclusion-card" style="display: none;">
+                                        <h3 class="conclusion-title">Analysis Conclusion</h3>
+                                        <!-- Enhanced Loader -->
+                                        <div id="conclusionLoader" class="conclusion-loader" style="display: none;">
+                                            <div class="conclusion-spinner">
+                                                <div class="dot-flashing"></div>
+                                            </div>
+                                            <div class="conclusion-processing-text">
+                                                Analyzing trends and generating insights
+                                                <span class="dot-follow">.</span>
+                                                <span class="dot-follow">.</span>
+                                                <span class="dot-follow">.</span>
+                                            </div>
                                         </div>
-                                        <div id="conclusionText" class="section">
+                                        <!-- Conclusion Content -->
+                                        <div id="conclusionText" class="conclusion-content">
                                         </div>
                                     </div>
-                                    <a id="download-link" style="display: none;" class="button">Download Raw Data
+                                    <a id="download-link" style="display: none;margin-top: 10px;" class="button">Download Raw Data
                                         (CSV)</a>
                                 </section>
                             </article>
@@ -415,7 +556,7 @@
         });
         async function generateTimeSeriesConclusion(results) {
             try {
-                // Show loader
+                // Show section and loader
                 document.getElementById('conclusionSection').style.display = 'block';
                 document.getElementById('conclusionLoader').style.display = 'block';
                 document.getElementById('conclusionText').style.display = 'none';
@@ -428,15 +569,15 @@
                     body: JSON.stringify(results)
                 });
 
-                // Hide loader
-                document.getElementById('conclusionLoader').style.display = 'none';
-                document.getElementById('conclusionText').style.display = 'block';
-
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
                 const data = await response.json();
+
+                // Always hide loader first
+                document.getElementById('conclusionLoader').style.display = 'none';
+                document.getElementById('conclusionText').style.display = 'block';
 
                 if (data.status === 'success') {
                     document.getElementById('conclusionText').innerHTML = `
@@ -446,8 +587,14 @@
                     throw new Error(data.message || 'Failed to generate conclusion');
                 }
             } catch (error) {
+                // Hide loader and show error
+                document.getElementById('conclusionLoader').style.display = 'none';
+                document.getElementById('conclusionText').style.display = 'block';
                 document.getElementById('conclusionText').innerHTML = `
-            <p class="error">Unable to generate conclusion: ${error.message}</p>
+            <p class="error">
+                <strong>Error generating conclusion:</strong><br>
+                ${error.message}
+            </p>
         `;
             }
         }
