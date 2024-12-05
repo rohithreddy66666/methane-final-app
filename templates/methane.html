@@ -62,12 +62,30 @@
                                         </div>
                                     </form>
                                 </div>
-                                <!-- Replace the current loading section with this -->
-                                <div id="loadingSection" class="box" style="display: none;">
-                                    <div class="section" style="text-align: center;">
-                                        <h3>Processing Data</h3>
-                                        <p>Please wait our Model is in action. This may take several minutes...</p>
-                                        <div class="loader"></div> <!-- Changed from spinner to loader -->
+                                <!-- New Loader with multiple animated elements -->
+                                <div class="methane-process-overlay" id="methaneLoader" style="display: none;">
+                                    <div class="methane-process-modal">
+                                        <div class="methane-process-content">
+                                            <!-- Bouncing Dots Loader -->
+                                            <div class="methane-loading-dots">
+                                                <div class="dot dot1"></div>
+                                                <div class="dot dot2"></div>
+                                                <div class="dot dot3"></div>
+                                            </div>
+
+                                            <h2 class="methane-process-title">PROCESSING EMIT DATA</h2>
+                                            <p class="methane-process-text">Our model is analyzing methane
+                                                concentrations. This may take several minutes...</p>
+
+                                            <!-- Simple Progress Bar -->
+                                            <div class="methane-process-status">
+                                                <div class="methane-progress-bar">
+                                                    <div class="methane-progress-fill"></div>
+                                                </div>
+                                                <p class="methane-process-message">Processing...Please don't close this
+                                                    window</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <!-- Results Section -->
@@ -176,40 +194,13 @@
             padding: 1em;
             line-height: 1.6;
         }
-    
+
         #conclusionText p {
             margin: 0;
         }
-    
+
         #conclusionText .error {
             color: #ff3860;
-}
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: conic-gradient(from 0deg, transparent 0%, transparent 10%, #3498db 100%);
-            animation: rotate 1.5s cubic-bezier(0.5, 0.1, 0.15, 1) infinite;
-            position: relative;
-            margin: 30px auto;
-        }
-
-        .spinner::before {
-            content: '';
-            position: absolute;
-            inset: 5px;
-            border-radius: 50%;
-            background-color: white;
-        }
-
-        @keyframes rotate {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
         }
 
         #statistics li,
@@ -224,120 +215,133 @@
     </style>
 
     <script>
-        document.getElementById('methaneForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
+        document.addEventListener('DOMContentLoaded', function () {
+            // Add loader control functions
+            function showMethaneLoader() {
+                document.getElementById('methaneLoader').style.display = 'flex';
+            }
 
-            const emitId = document.getElementById('emitId').value;
+            function hideMethaneLoader() {
+                document.getElementById('methaneLoader').style.display = 'none';
+            }
 
-            // Hide any previous results/errors and show loading
-            document.getElementById('resultsSection').style.display = 'none';
-            document.getElementById('errorSection').style.display = 'none';
-            document.getElementById('loadingSection').style.display = 'block';
+            document.getElementById('methaneForm').addEventListener('submit', async function (e) {
+                e.preventDefault();
 
-            try {
-                // Make API request
-                const response = await fetch('/process', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ emit_id: emitId })
-                });
+                const emitId = document.getElementById('emitId').value;
 
-                const data = await response.json();
+                // Hide any previous results/errors
+                document.getElementById('resultsSection').style.display = 'none';
+                document.getElementById('errorSection').style.display = 'none';
 
-                if (!data.success) {
-                    throw new Error(data.error || 'Processing failed');
-                }
+                // Show the new loader
+                showMethaneLoader();
 
-                // Hide loading and show results
-                document.getElementById('loadingSection').style.display = 'none';
-                document.getElementById('resultsSection').style.display = 'block';
+                try {
+                    // Make API request
+                    const response = await fetch('/process', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ emit_id: emitId })
+                    });
 
-                // Update results
-                const results = data.results;
+                    const data = await response.json();
 
-                // Update image - using the full path returned from the server
-                const resultImage = document.getElementById('resultImage');
-                resultImage.src = results.visualization_path;
-                resultImage.onerror = function () {
-                    console.error('Failed to load image:', results.visualization_path);
-                    this.src = ''; // Clear the broken image
+                    if (!data.success) {
+                        throw new Error(data.error || 'Processing failed');
+                    }
+
+                    // Hide loader and show results
+                    hideMethaneLoader();
+                    document.getElementById('resultsSection').style.display = 'block';
+
+                    // Update results
+                    const results = data.results;
+
+                    // Update image - using the full path returned from the server
+                    const resultImage = document.getElementById('resultImage');
+                    resultImage.src = results.visualization_path;
+                    resultImage.onerror = function () {
+                        console.error('Failed to load image:', results.visualization_path);
+                        this.src = ''; // Clear the broken image
+                        document.getElementById('errorSection').style.display = 'block';
+                        document.getElementById('errorMessage').textContent = 'Failed to load result image';
+                    };
+
+                    // Update location information
+                    const locationInfo = document.getElementById('locationInfo');
+                    locationInfo.innerHTML = `
+                    <li><strong>Latitude Range:</strong> ${results.coordinates.min_lat.toFixed(4)}° to ${results.coordinates.max_lat.toFixed(4)}°</li>
+                    <li><strong>Longitude Range:</strong> ${results.coordinates.min_lon.toFixed(4)}° to ${results.coordinates.max_lon.toFixed(4)}°</li>
+                    <li><strong>Processing Date:</strong> ${results.processing_date}</li>
+                `;
+
+                    // Update statistics
+                    const statistics = document.getElementById('statistics');
+                    statistics.innerHTML = `
+                    <li><strong>Detection Status:</strong> ${results.has_plumes ? 'Methane Plumes Detected' : 'No Significant Methane Detected'}</li>
+                    <li><strong>Maximum Concentration:</strong> ${results.statistics.max_concentration.toFixed(2)} ppm x m</li>
+                    <li><strong>Average Concentration:</strong> ${results.statistics.avg_concentration.toFixed(2)} ppm x m</li>
+                    <li><strong>Affected Area:</strong> ${results.statistics.percentage_significant.toFixed(2)}% of image</li>
+                    <li><strong>Processing Time:</strong> ${data.processing_time.toFixed(2)} seconds</li>
+                `;
+
+                    // Generate conclusion
+                    console.log("Calling generateConclusion with results:", results);  // Debug log
+                    await generateConclusion(results);
+                    document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+
+                } catch (error) {
+                    // Hide loader and show error
+                    hideMethaneLoader();
                     document.getElementById('errorSection').style.display = 'block';
-                    document.getElementById('errorMessage').textContent = 'Failed to load result image';
-                };
+                    document.getElementById('errorMessage').textContent = error.message || 'An error occurred during processing';
+                    document.getElementById('conclusionSection').style.display = 'none';
+                }
+            });
 
-                // Update location information
-                const locationInfo = document.getElementById('locationInfo');
-                locationInfo.innerHTML = `
-				<li><strong>Latitude Range:</strong> ${results.coordinates.min_lat.toFixed(4)}° to ${results.coordinates.max_lat.toFixed(4)}°</li>
-				<li><strong>Longitude Range:</strong> ${results.coordinates.min_lon.toFixed(4)}° to ${results.coordinates.max_lon.toFixed(4)}°</li>
-				<li><strong>Processing Date:</strong> ${results.processing_date}</li>
-			`;
+            async function generateConclusion(results) {
+                try {
+                    console.log("Starting conclusion generation");
+                    console.log("Results data:", results);  // Debug log
 
-                // Update statistics
-                const statistics = document.getElementById('statistics');
-                statistics.innerHTML = `
-				<li><strong>Detection Status:</strong> ${results.has_plumes ? 'Methane Plumes Detected' : 'No Significant Methane Detected'}</li>
-				<li><strong>Maximum Concentration:</strong> ${results.statistics.max_concentration.toFixed(2)} ppm x m</li>
-				<li><strong>Average Concentration:</strong> ${results.statistics.avg_concentration.toFixed(2)} ppm x m</li>
-				<li><strong>Affected Area:</strong> ${results.statistics.percentage_significant.toFixed(2)}% of image</li>
-				<li><strong>Processing Time:</strong> ${data.processing_time.toFixed(2)} seconds</li>
-			`;
+                    const response = await fetch('/generate_conclusion', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(results)
+                    });
 
-                // Scroll to results// Generate conclusion
-                // Generate conclusion
-                console.log("Calling generateConclusion with results:", results);  // Debug log
-                await generateConclusion(results);
-                document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error("Server response:", errorText);  // Debug log
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
 
-            } catch (error) {
-                // Hide loading and show error
-                document.getElementById('loadingSection').style.display = 'none';
-                document.getElementById('errorSection').style.display = 'block';
-                document.getElementById('errorMessage').textContent = error.message || 'An error occurred during processing';
-                document.getElementById('conclusionSection').style.display = 'none';
+                    const data = await response.json();
+                    console.log("Received conclusion data:", data);  // Debug log
+
+                    document.getElementById('conclusionSection').style.display = 'block';
+                    if (data.status === 'success') {
+                        document.getElementById('conclusionText').innerHTML = `
+                        <p>${data.conclusion}</p>
+                    `;
+                    } else {
+                        throw new Error(data.message || 'Failed to generate conclusion');
+                    }
+                } catch (error) {
+                    console.error("Error in generateConclusion:", error);  // Debug log
+                    document.getElementById('conclusionSection').style.display = 'block';
+                    document.getElementById('conclusionText').innerHTML = `
+                    <p class="error">Unable to generate conclusion: ${error.message}</p>
+                `;
+                }
             }
         });
-                    async function generateConclusion(results) {
-                        try {
-                            console.log("Starting conclusion generation");
-                            console.log("Results data:", results);  // Debug log
-
-                            const response = await fetch('/generate_conclusion', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify(results)
-                            });
-
-                            if (!response.ok) {
-                                const errorText = await response.text();
-                                console.error("Server response:", errorText);  // Debug log
-                                throw new Error(`HTTP error! status: ${response.status}`);
-                            }
-
-                            const data = await response.json();
-                            console.log("Received conclusion data:", data);  // Debug log
-
-                            document.getElementById('conclusionSection').style.display = 'block';
-                            if (data.status === 'success') {
-                                document.getElementById('conclusionText').innerHTML = `
-                <p>${data.conclusion}</p>
-            `;
-                            } else {
-                                throw new Error(data.message || 'Failed to generate conclusion');
-                            }
-                        } catch (error) {
-                            console.error("Error in generateConclusion:", error);  // Debug log
-                            document.getElementById('conclusionSection').style.display = 'block';
-                            document.getElementById('conclusionText').innerHTML = `
-            <p class="error">Unable to generate conclusion: ${error.message}</p>
-        `;
-                        }
-                    }
-                </script>
+    </script>
     {{ chat_widget()|safe }}
 </body>
 
