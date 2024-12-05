@@ -2,8 +2,6 @@ import os
 from openai import OpenAI
 from dotenv import load_dotenv
 import logging
-
-#"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"
 # Initialize logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
