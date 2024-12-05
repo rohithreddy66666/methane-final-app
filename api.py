@@ -138,19 +138,25 @@ def analyze_data():
             'message': 'CSV file not found. Please fetch data first.'
         })
 
+    # Replace the data loading section in analyze_data with:
     try:
-        # Load the CSV file
         df = pd.read_csv(csv_path)
-        df['date'] = pd.to_datetime(df['date'])
+        df['date'] = pd.to_datetime(df['date']).dt.normalize()
+        
+        # Group by date and take the mean of CH4 values for each date
+        df = df.groupby('date')['CH4'].mean().reset_index()
         df = df.sort_values('date')
         
-        # Get the latest date from our data
+        # Get the latest date AFTER grouping and sorting
         latest_date = df['date'].max()
         
-        # Generate dates for next 30 days
+        logger.info("After grouping - Data sample:")
+        logger.info(df.head().to_string())
+        
+        # Generate dates for next 30 days (now latest_date is defined)
         forecast_dates = pd.date_range(
             start=latest_date + pd.Timedelta(days=1),
-            periods=30,  # Changed to 30 days for one month
+            periods=30,
             freq='D'
         )
         
@@ -218,9 +224,28 @@ def analyze_data():
             lstm_rmse = np.sqrt(mean_squared_error(y_test_numpy, test_predictions))
             lstm_mae = mean_absolute_error(y_test_numpy, test_predictions)
 
-        # Nixtla analysis
+        # Nixtla analysis section:
         df_nixtla = df.rename(columns={'date': 'ds', 'CH4': 'y'})
-        fcst_df = nixtla_client.forecast(df_nixtla, h=30, level=[80, 90], freq='D')  # Changed to 30 days
+
+        # Ensure regular daily frequency with no gaps
+        df_nixtla = df_nixtla.set_index('ds')
+        df_nixtla = df_nixtla.resample('D').asfreq()
+        df_nixtla = df_nixtla.interpolate(method='linear')  # Fill any gaps
+        df_nixtla = df_nixtla.reset_index()
+
+        df_nixtla['ds'] = df_nixtla['ds'].dt.tz_localize(None)
+
+        # Add debug logging
+        logger.info("Nixtla input data sample after processing:")
+        logger.info(df_nixtla.head().to_string())
+        logger.info("\nTimestamp differences:")
+        logger.info(df_nixtla['ds'].diff().value_counts().to_string())
+
+        # Check for duplicates
+        if df_nixtla['ds'].duplicated().any():
+            logger.warning("Duplicates still exist after processing!")
+            
+        fcst_df = nixtla_client.forecast(df_nixtla, h=30, level=[80, 90], freq='D')
 
         # Calculate Nixtla metrics
         nixtla_rmse = np.sqrt(mean_squared_error(df_nixtla['y'].tail(5), fcst_df['TimeGPT'][:5]))
