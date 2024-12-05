@@ -176,6 +176,7 @@ body {
 	background: #f2f5f3;
 }
 
+
 body,
 input,
 textarea,
@@ -3570,6 +3571,7 @@ h4 {
 	background-color: #f8f9fa;
 	border-radius: 4px;
 }
+
 .methane-process-overlay {
     position: fixed;
     top: 0;
@@ -3696,29 +3698,88 @@ h4 {
         opacity: 0.7;
     }
 }
-/* Responsive Design */
-@media (max-width: 768px) {
-	.container {
-		padding: 10px;
-	}
 
-	.date-pickers {
-		flex-direction: column;
-	}
+/* Enhanced Statistics Styling */
+.info-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(177, 221, 171, 0.3);
+    overflow: hidden;
+}
 
-	#map {
-		height: 300px;
-	}
+.info-card-header {
+    background: #f8f9fa;
+    border-bottom: 2px solid rgba(177, 221, 171, 0.2);
+    padding: 1rem 1.5rem;
+}
 
-	.forecast-grid {
-		grid-template-columns: 1fr;
-	}
+.info-card-header h4 {
+    color: #2c3e50;
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
 
-	.predictions-scroll {
-		height: 300px;
-	}
+.info-card-content {
+    padding: 1.5rem;
+}
 
-	#plot {
-		height: 300px;
-	}
+.info-card-content ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.info-card-content li {
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+    position: relative;
+    line-height: 1.5;
+}
+
+.info-card-content li:last-child {
+    margin-bottom: 0;
+}
+
+.info-card-content li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: #b1ddab;
+    font-weight: bold;
+}
+
+.info-card-content strong {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-right: 0.5rem;
+}
+
+/* Specific styling for different stat types */
+.stat-coordinate {
+    color: #2563eb;
+}
+
+.stat-date {
+    color: #666;
+    font-family: monospace;
+}
+
+.stat-status {
+    color: #059669;
+    font-weight: 600;
+}
+
+.stat-measurement {
+    color: #7c3aed;
+}
+
+.stat-percentage {
+    color: #dc2626;
+}
+
+.stat-time {
+    color: #2563eb;
 }
