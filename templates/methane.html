@@ -98,16 +98,25 @@
                                             <img id="resultImage" src="" alt="Methane Analysis Visualization"
                                                 style="width: 100%;" />
                                         </div>
-
-                                        <!-- Statistics -->
+                                        <!-- Replace the Statistics section in your Results div -->
                                         <div class="row">
                                             <div class="col-6 col-12-medium">
-                                                <h4>Location Information</h4>
-                                                <ul id="locationInfo"></ul>
+                                                <div class="info-card">
+                                                    <div class="info-card-header">
+                                                        <h4>Location Information</h4>
+                                                    </div>
+                                                    <div class="info-card-content" id="locationInfo">
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div class="col-6 col-12-medium">
-                                                <h4>Detection Statistics</h4>
-                                                <ul id="statistics"></ul>
+                                                <div class="info-card">
+                                                    <div class="info-card-header">
+                                                        <h4>Detection Statistics</h4>
+                                                    </div>
+                                                    <div class="info-card-content" id="statistics">
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -123,13 +132,26 @@
                                 <section style="margin-bottom: 10px;">
                                     <span class="image featured"><img src="assets/images/b.jpg" alt="" /></span>
                                 </section>
-                                <section id="conclusionSection" class="box" style="display: none;">
-                                    <h3>Analysis Conclusion</h3>
-                                    <div id="conclusionText" class="section">
-                                        <p>Generating conclusion...</p>
-                                    </div>
-                                </section>
+                                <!-- Replace the current conclusion section with this -->
+                                <div id="conclusionSection" class="conclusion-card" style="display: none;">
+                                    <h3 class="conclusion-title">Analysis Conclusion</h3>
 
+                                    <!-- Enhanced Loader -->
+                                    <div id="conclusionLoader" class="conclusion-loader" style="display: none;">
+                                        <div class="conclusion-spinner">
+                                            <div class="dot-flashing"></div>
+                                        </div>
+                                        <div class="conclusion-processing-text">
+                                            Analyzing detection results and generating insights
+                                            <span class="dot-follow">.</span>
+                                            <span class="dot-follow">.</span>
+                                            <span class="dot-follow">.</span>
+                                        </div>
+                                    </div>
+
+                                    <div id="conclusionText" class="conclusion-content">
+                                    </div>
+                                </div>
                             </article>
 
                         </div>
@@ -212,6 +234,135 @@
         .box {
             margin-bottom: 2em;
         }
+
+        .conclusion-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+            margin-top: 2rem;
+            overflow: hidden;
+            border: 1px solid rgba(177, 221, 171, 0.3);
+        }
+
+        .conclusion-title {
+            background: #f8f9fa;
+            color: #2c3e50;
+            padding: 1rem 1.5rem;
+            margin: 0;
+            border-bottom: 2px solid rgba(177, 221, 171, 0.2);
+            font-size: 1.3rem;
+        }
+
+        .conclusion-content {
+            padding: 1.5rem;
+            line-height: 1.6;
+        }
+
+        /* Loader Styles */
+        .conclusion-loader {
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .conclusion-processing-text {
+            color: #666;
+            font-size: 1.1rem;
+            margin-top: 1rem;
+        }
+
+        /* Flashing Dot Animation */
+        .dot-flashing {
+            position: relative;
+            width: 12px;
+            height: 12px;
+            border-radius: 6px;
+            background-color: #b1ddab;
+            color: #b1ddab;
+            animation: dot-flashing 1s infinite linear alternate;
+            animation-delay: .5s;
+            margin: 0 auto;
+        }
+
+        .dot-flashing::before,
+        .dot-flashing::after {
+            content: '';
+            display: inline-block;
+            position: absolute;
+            top: 0;
+        }
+
+        .dot-flashing::before {
+            left: -20px;
+            width: 12px;
+            height: 12px;
+            border-radius: 6px;
+            background-color: #b1ddab;
+            color: #b1ddab;
+            animation: dot-flashing 1s infinite alternate;
+            animation-delay: 0s;
+        }
+
+        .dot-flashing::after {
+            left: 20px;
+            width: 12px;
+            height: 12px;
+            border-radius: 6px;
+            background-color: #b1ddab;
+            color: #b1ddab;
+            animation: dot-flashing 1s infinite alternate;
+            animation-delay: 1s;
+        }
+
+        @keyframes dot-flashing {
+            0% {
+                background-color: #b1ddab;
+            }
+
+            50%,
+            100% {
+                background-color: rgba(177, 221, 171, 0.2);
+            }
+        }
+
+        /* Follow-up dots animation */
+        .dot-follow {
+            opacity: 0;
+            animation: dot-appearing 1.5s infinite;
+        }
+
+        .dot-follow:nth-child(2) {
+            animation-delay: 0.25s;
+        }
+
+        .dot-follow:nth-child(3) {
+            animation-delay: 0.5s;
+        }
+
+        @keyframes dot-appearing {
+
+            0%,
+            100% {
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* Result text styles */
+        #conclusionText p {
+            margin: 0;
+            color: #2c3e50;
+        }
+
+        #conclusionText .error {
+            color: #ff3860;
+            background: #fff5f5;
+            padding: 1rem;
+            border-radius: 4px;
+            border-left: 4px solid #ff3860;
+        }
     </style>
 
     <script>
@@ -273,20 +424,24 @@
                     // Update location information
                     const locationInfo = document.getElementById('locationInfo');
                     locationInfo.innerHTML = `
-                    <li><strong>Latitude Range:</strong> ${results.coordinates.min_lat.toFixed(4)}° to ${results.coordinates.max_lat.toFixed(4)}°</li>
-                    <li><strong>Longitude Range:</strong> ${results.coordinates.min_lon.toFixed(4)}° to ${results.coordinates.max_lon.toFixed(4)}°</li>
-                    <li><strong>Processing Date:</strong> ${results.processing_date}</li>
-                `;
+    <ul>
+        <li><strong>Latitude Range:</strong> <span class="stat-coordinate">${results.coordinates.min_lat.toFixed(4)}° to ${results.coordinates.max_lat.toFixed(4)}°</span></li>
+        <li><strong>Longitude Range:</strong> <span class="stat-coordinate">${results.coordinates.min_lon.toFixed(4)}° to ${results.coordinates.max_lon.toFixed(4)}°</span></li>
+        <li><strong>Processing Date:</strong> <span class="stat-date">${results.processing_date}</span></li>
+    </ul>
+`;
 
                     // Update statistics
                     const statistics = document.getElementById('statistics');
                     statistics.innerHTML = `
-                    <li><strong>Detection Status:</strong> ${results.has_plumes ? 'Methane Plumes Detected' : 'No Significant Methane Detected'}</li>
-                    <li><strong>Maximum Concentration:</strong> ${results.statistics.max_concentration.toFixed(2)} ppm x m</li>
-                    <li><strong>Average Concentration:</strong> ${results.statistics.avg_concentration.toFixed(2)} ppm x m</li>
-                    <li><strong>Affected Area:</strong> ${results.statistics.percentage_significant.toFixed(2)}% of image</li>
-                    <li><strong>Processing Time:</strong> ${data.processing_time.toFixed(2)} seconds</li>
-                `;
+    <ul>
+        <li><strong>Detection Status:</strong> <span class="stat-status">${results.has_plumes ? 'Methane Plumes Detected' : 'No Significant Methane Detected'}</span></li>
+        <li><strong>Maximum Concentration:</strong> <span class="stat-measurement">${results.statistics.max_concentration.toFixed(2)} ppm x m</span></li>
+        <li><strong>Average Concentration:</strong> <span class="stat-measurement">${results.statistics.avg_concentration.toFixed(2)} ppm x m</span></li>
+        <li><strong>Affected Area:</strong> <span class="stat-percentage">${results.statistics.percentage_significant.toFixed(2)}% of image</span></li>
+        <li><strong>Processing Time:</strong> <span class="stat-time">${data.processing_time.toFixed(2)} seconds</span></li>
+    </ul>
+`;
 
                     // Generate conclusion
                     console.log("Calling generateConclusion with results:", results);  // Debug log
@@ -304,8 +459,13 @@
 
             async function generateConclusion(results) {
                 try {
+                    // Show section and loader
+                    document.getElementById('conclusionSection').style.display = 'block';
+                    document.getElementById('conclusionLoader').style.display = 'block';
+                    document.getElementById('conclusionText').style.display = 'none';
+
                     console.log("Starting conclusion generation");
-                    console.log("Results data:", results);  // Debug log
+                    console.log("Results data:", results);
 
                     const response = await fetch('/generate_conclusion', {
                         method: 'POST',
@@ -317,27 +477,35 @@
 
                     if (!response.ok) {
                         const errorText = await response.text();
-                        console.error("Server response:", errorText);  // Debug log
+                        console.error("Server response:", errorText);
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
 
                     const data = await response.json();
-                    console.log("Received conclusion data:", data);  // Debug log
+                    console.log("Received conclusion data:", data);
 
-                    document.getElementById('conclusionSection').style.display = 'block';
+                    // Hide loader and show conclusion
+                    document.getElementById('conclusionLoader').style.display = 'none';
+                    document.getElementById('conclusionText').style.display = 'block';
+
                     if (data.status === 'success') {
                         document.getElementById('conclusionText').innerHTML = `
-                        <p>${data.conclusion}</p>
-                    `;
+                <p>${data.conclusion}</p>
+            `;
                     } else {
                         throw new Error(data.message || 'Failed to generate conclusion');
                     }
                 } catch (error) {
-                    console.error("Error in generateConclusion:", error);  // Debug log
-                    document.getElementById('conclusionSection').style.display = 'block';
+                    console.error("Error in generateConclusion:", error);
+                    // Hide loader and show error
+                    document.getElementById('conclusionLoader').style.display = 'none';
+                    document.getElementById('conclusionText').style.display = 'block';
                     document.getElementById('conclusionText').innerHTML = `
-                    <p class="error">Unable to generate conclusion: ${error.message}</p>
-                `;
+            <p class="error">
+                <strong>Error generating conclusion:</strong><br>
+                ${error.message}
+            </p>
+        `;
                 }
             }
         });
