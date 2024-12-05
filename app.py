@@ -297,4 +297,4 @@ if __name__ == '__main__':
     logger.info("Starting Combined Methane Detection and Analysis Server...")
     app = create_app()
     logger.info("Server is ready!")
-    app.run(debug=True, port=5000)
+    app.run(host='0.0.0.0', debug=True, port=5000)
