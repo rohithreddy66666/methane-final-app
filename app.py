@@ -10,7 +10,6 @@ from methane_detection import process_emit_data
 from bot_handler import BotHandler
 import traceback
 from methane_detection import ModelCache
-
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -52,6 +51,47 @@ def create_app():
         logger.info("Model pre-loaded successfully")
     except Exception as e:
         logger.error(f"Model pre-loading warning (will try again when needed): {e}")
+
+    @app.route('/generate_conclusion', methods=['POST'])
+    def generate_conclusion():
+        try:
+            logger.info("Received conclusion request")
+            analysis_results = request.json
+            if not analysis_results:
+                logger.error("No analysis results provided")
+                raise ValueError("No analysis results provided")
+            
+            logger.info(f"Analysis results received: {analysis_results}")
+            bot_handler = BotHandler()
+            conclusion = bot_handler.generate_conclusion(analysis_results)
+            
+            logger.info(f"Conclusion generated successfully: {conclusion}")
+            return jsonify(conclusion)
+        except Exception as e:
+            logger.error(f"Error in generate_conclusion: {str(e)}")
+            logger.error(traceback.format_exc())  # Add full traceback
+            return jsonify({
+                'status': 'error',
+                'message': str(e)
+            }), 500
+    @app.route('/generate_time_series_conclusion', methods=['POST'])
+    def generate_time_series_conclusion():
+        try:
+            analysis_results = request.json
+            if not analysis_results:
+                raise ValueError("No analysis results provided")
+                
+            bot_handler = BotHandler()
+            conclusion = bot_handler.generate_time_series_conclusion(analysis_results)
+            
+            logger.info("Time series conclusion generated successfully")
+            return jsonify(conclusion)
+        except Exception as e:
+            logger.error(f"Error in generate_time_series_conclusion: {str(e)}")
+            return jsonify({
+                'status': 'error',
+                'message': str(e)
+            }), 500
 
     @app.context_processor
     def inject_chat_widget():
