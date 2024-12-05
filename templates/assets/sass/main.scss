@@ -109,14 +109,6 @@
 	body {
 		background: #f2f5f3;
 
-		// Stops initial animations until page loads.
-			&.is-preload {
-				*, *:before, *:after {
-					@include vendor('animation', 'none !important');
-					@include vendor('transition', 'none !important');
-				}
-			}
-
 	}
 
 	body, input, textarea, select {
