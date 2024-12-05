@@ -106,3 +106,86 @@ class BotHandler:
                 )
                 
         return " | ".join(context) if context else None
+
+    def generate_time_series_conclusion(self, time_series_results):
+        try:
+            prompt = f"""Based on the following methane time series analysis results, provide a clear, data-driven conclusion about the trends and predictions:
+
+            Analysis Results:
+            - LSTM Model Forecast:
+            * Average Predicted Level: {time_series_results['monthly_means']['lstm']:.2f} ppb
+
+            - Nixtla GPT Forecast:
+            * Average Predicted Level: {time_series_results['monthly_means']['nixtla']:.2f} ppb
+
+            Please provide:
+            1. Analysis of the predicted trends
+            2. Comparison between LSTM and Nixtla predictions
+            3. Assessment of model performance
+            4. Key insights about future methane levels"""
+
+            response = self.client.chat.completions.create(
+                model="gpt-4-turbo-preview",
+                messages=[
+                    {"role": "system", "content": self.system_prompt},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+            )
+            
+            return {
+                "status": "success",
+                "conclusion": response.choices[0].message.content
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generating time series conclusion: {str(e)}")
+            return {
+                "status": "error",
+                "message": f"Failed to generate conclusion: {str(e)}"
+            }
+
+    def generate_conclusion(self, analysis_results):
+        try:
+            # Format the analysis results into a clear prompt
+            prompt = f"""Based on the following methane analysis results, provide a clear, concise conclusion about the methane levels and their implications:
+
+            Location Analysis:
+            - Maximum Concentration: {analysis_results['statistics']['max_concentration']:.2f} ppm x m
+            - Average Concentration: {analysis_results['statistics']['avg_concentration']:.2f} ppm x m
+            - Significant Methane Pixels: {analysis_results['statistics']['significant_methane']}
+            - Total Pixels Analyzed: {analysis_results['statistics']['total_pixels']}
+            - Percentage Area Affected: {analysis_results['statistics']['percentage_significant']:.2f}%
+            - Detection Threshold: {analysis_results['statistics']['methane_threshold']} ppm x m
+            
+            Geographic Coverage:
+            - Latitude Range: {analysis_results['coordinates']['min_lat']:.4f}° to {analysis_results['coordinates']['max_lat']:.4f}°
+            - Longitude Range: {analysis_results['coordinates']['min_lon']:.4f}° to {analysis_results['coordinates']['max_lon']:.4f}°
+            - talk which place can it be 
+            
+            Please provide:
+            1. Assessment of methane concentration levels
+            2. Potential environmental implications
+            3. Whether these levels warrant attention
+            4. Any notable patterns or hotspots"""
+
+            response = self.client.chat.completions.create(
+                model="gpt-4-turbo-preview",
+                messages=[
+                    {"role": "system", "content": self.system_prompt},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7
+            )
+            
+            return {
+                "status": "success",
+                "conclusion": response.choices[0].message.content
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generating conclusion: {str(e)}")
+            return {
+                "status": "error",
+                "message": f"Failed to generate conclusion: {str(e)}"
+            }
