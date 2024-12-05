@@ -3570,55 +3570,132 @@ h4 {
 	background-color: #f8f9fa;
 	border-radius: 4px;
 }
-/* Add this CSS to your existing stylesheet */
-.spinner {
-	position: relative;
-	width: 60px;
-	height: 60px;
-	margin: 30px auto;
-	z-index: 100;
-  }
-  
-  .spinner:before {
-	content: '';
-	box-sizing: border-box;
-	position: absolute;
-	width: 100%;
-	height: 100%;
-	border: 3px solid #f3f3f3;
-	border-top-color: #3498db;
-	border-radius: 50%;
-	animation: spinner 1s linear infinite;
-  }
-  
-  @keyframes spinner {
-	to {
-	  transform: rotate(360deg);
-	}
-  }
-  
-  /* Additional styles to ensure loader visibility */
-  #loadingSection {
-	position: relative;
-	width: 26%;
-	margin-left: 40%;
-	background: rgba(255, 255, 255, 0.95);
-	padding: 2em;
-	text-align: center;
-	border-radius: 8px;
-	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-	animation: spin 10s linear infinite !important;
-  }
-  
-  #loadingSection h3 {
-	color: #6b7770;
-	margin-bottom: 1em;
-  }
-  
-  #loadingSection p {
-	color: #888;
-	margin-bottom: 2em;
-  }
+.methane-process-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+}
+
+.methane-process-modal {
+    background: white;
+    border-radius: 12px;
+    padding: 40px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.methane-process-content {
+    text-align: center;
+}
+
+/* Bouncing Dots Animation */
+.methane-loading-dots {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 25px;
+}
+
+.dot {
+    width: 15px;
+    height: 15px;
+    background: #b1ddab;
+    border-radius: 50%;
+    animation: bounce 0.5s cubic-bezier(0.19, 0.57, 0.3, 0.98) infinite alternate;
+}
+
+.dot2 {
+    animation-delay: 0.1s;
+}
+
+.dot3 {
+    animation-delay: 0.2s;
+}
+
+@keyframes bounce {
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(-15px);
+    }
+}
+
+.methane-process-title {
+    color: #2c3e50;
+    font-size: 24px;
+    margin: 0 0 15px 0;
+    font-weight: 600;
+}
+
+.methane-process-text {
+    color: #666;
+    font-size: 16px;
+    line-height: 1.4;
+    margin: 0 0 25px 0;
+}
+
+.methane-process-status {
+    margin-top: 20px;
+}
+
+/* Simple Progress Bar */
+.methane-progress-bar {
+    background: #f0f0f0;
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 15px 0;
+    position: relative;
+}
+
+.methane-progress-fill {
+    position: absolute;
+    height: 100%;
+    background: linear-gradient(90deg, #3498db, #2ecc71);
+    width: 0%;
+    animation: progress-move 2s ease-in-out infinite;
+}
+
+.methane-process-message {
+    color: #666;
+    font-size: 14px;
+    margin: 10px 0 0 0;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes progress-move {
+    0% {
+        width: 0%;
+        transform: translateX(-100%);
+    }
+    50% {
+        width: 100%;
+        transform: translateX(0);
+    }
+    100% {
+        width: 0%;
+        transform: translateX(100%);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
 /* Responsive Design */
 @media (max-width: 768px) {
 	.container {
