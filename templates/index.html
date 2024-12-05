@@ -139,13 +139,15 @@
 
 						<!-- About -->
 						<section>
-							<h2 class="major"><span>About This Application</span></h2>
-							<p> This application is designed to detect methane emissions using emitted data and perform
-								time series analysis on methane levels through the Google Earth Engine. This project was
-								developed as part of the <strong>Applied Data Science</strong> course at <strong>San
-									Jose State University</strong> by <strong>Team-6</strong>, under the guidance of
-								Professor <strong>Dr.Simon Shim</strong>. </p>
-						</section>
+   <h2 class="major"><span>About This Application</span></h2>
+   <p>This application analyzes methane emissions using two key data sources:</p>
+
+   <p><strong>EMIT (Earth Surface Mineral Dust Source Investigation)</strong> data from NASA's JPL provides high-resolution methane plume detection. Our system uses MAG1C algorithm and UNET models to process EMIT's hyperspectral imagery for precise methane hotspot identification.</p>
+
+   <p><strong>Sentinel-5P TROPOMI</strong> satellite data through Google Earth Engine enables historical methane concentration analysis. We employ LSTM and Nixtla TimeGPT models for time series forecasting of methane levels.</p>
+
+   <p>Developed by <strong>Team-6</strong> for the <strong>Applied Data Science</strong> course at <strong>San Jose State University</strong>, under Professor <strong>Dr. Simon Shim</strong>, this tool helps identify and predict methane emissions for environmental monitoring.</p>
+</section>
 					</div>
 					<div class="col-12">
 
