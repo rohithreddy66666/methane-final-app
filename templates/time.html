@@ -130,11 +130,30 @@
                                     </div>
 
                                     <button id="analyze-button" disabled class="button">Analyze Selected Area</button>
+                                    <!-- New Loader with same style as methane.html -->
+<div class="methane-process-overlay" id="loader" style="display: none;">
+    <div class="methane-process-modal">
+        <div class="methane-process-content">
+            <!-- Bouncing Dots Loader -->
+            <div class="methane-loading-dots">
+                <div class="dot dot1"></div>
+                <div class="dot dot2"></div>
+                <div class="dot dot3"></div>
+            </div>
 
-                                    <div id="loader" class="hidden">
-                                        <div class="spinner"></div>
-                                        <p>Processing data...</p>
-                                    </div>
+            <h2 class="methane-process-title">ANALYZING TIME SERIES DATA</h2>
+            <p class="methane-process-text">Our models are processing methane concentrations and generating forecasts...</p>
+
+            <!-- Simple Progress Bar -->
+            <div class="methane-process-status">
+                <div class="methane-progress-bar">
+                    <div class="methane-progress-fill"></div>
+                </div>
+                <p class="methane-process-message">Processing...Please don't close this window</p>
+            </div>
+        </div>
+    </div>
+</div>
 
                                     <div id="process-status"></div>
                                     <div id="results"></div>
@@ -290,7 +309,7 @@
             document.getElementById('analyze-button').disabled = true;
 
             // Show loader
-            document.getElementById('loader').classList.remove('hidden');
+            document.getElementById('loader').style.display = 'flex';
             updateStatus('Fetching methane data...');
 
             // Get bounds
@@ -328,7 +347,7 @@
                     }
 
                     // Hide loader
-                    document.getElementById('loader').classList.add('hidden');
+                    document.getElementById('loader').style.display = 'none';
 
                     // Display the plot
                     if (results.plot_json) {
