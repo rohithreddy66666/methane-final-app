@@ -12,6 +12,13 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
+<div class="nav-toggle-container">
+  <button class="nav-toggle" onclick="toggleNav()">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+</div>
 <style>
     #conclusionSection {
         margin-top: 2rem;
@@ -598,6 +605,10 @@
         `;
             }
         }
+        function toggleNav() {
+  document.getElementById('nav').classList.toggle('active');
+  document.querySelector('.nav-toggle').classList.toggle('active');
+}
     </script>
     {{ chat_widget()|safe }}
 </body>
