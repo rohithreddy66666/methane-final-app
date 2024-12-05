@@ -1,271 +1,343 @@
 <!DOCTYPE HTML>
 <html>
-    <head>
-        <title>Methane Time Series Analysis</title>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-        
-        <!-- CSS Dependencies -->
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-        <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    </head>
-    <body class="is-preload">
-        <div id="page-wrapper">
-            <!-- Header -->
-            <header id="header">
-                <div class="logo container">
-                    <div>
-                        <h1><a href="{{ url_for('index') }}" id="logo">Methane</a></h1>
-                        <p>Time Series Analysis</p>
-                    </div>
+
+<head>
+    <title>Methane Time Series Analysis</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+
+    <!-- CSS Dependencies -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+</head>
+<style>
+    #conclusionSection {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: white;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    #conclusionText {
+        line-height: 1.6;
+    }
+
+    #conclusionText .error {
+        color: #ff3860;
+        font-weight: bold;
+    }
+
+    .error {
+        color: #ff3860;
+        font-weight: bold;
+    }
+
+    #conclusionLoader {
+        text-align: center;
+        padding: 10px;
+    }
+
+    #conclusionLoader p {
+        color: #666;
+        font-size: 0.9em;
+        margin: 0;
+    }
+
+    #conclusionLoader p:after {
+        content: "...";
+        animation: dots 1.5s steps(5, end) infinite;
+    }
+
+    @keyframes dots {
+
+        0%,
+        20% {
+            content: "";
+        }
+
+        40% {
+            content: ".";
+        }
+
+        60% {
+            content: "..";
+        }
+
+        80%,
+        100% {
+            content: "...";
+        }
+    }
+</style>
+
+<body class="is-preload">
+    <div id="page-wrapper">
+        <!-- Header -->
+        <header id="header">
+            <div class="logo container">
+                <div>
+                    <h1><a href="{{ url_for('index') }}" id="logo">Methane</a></h1>
+                    <p>Time Series Analysis</p>
                 </div>
-            </header>
+            </div>
+        </header>
 
-            <!-- Nav -->
-            <nav id="nav">
-                <ul>
-                    <li><a href="{{ url_for('index') }}">Home</a></li>
-                    <li><a href="{{ url_for('methane') }}">Methane Detection</a></li>
-                    <li class="current"><a href="{{ url_for('time_series') }}">Time Series</a></li>
-                </ul>
-            </nav>
+        <!-- Nav -->
+        <nav id="nav">
+            <ul>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('methane') }}">Methane Detection</a></li>
+                <li class="current"><a href="{{ url_for('time_series') }}">Time Series</a></li>
+            </ul>
+        </nav>
 
-            <!-- Main -->
-            <section id="main">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="content">
-                                <article class="box page-content" style="margin-top: -96px;">
-                                    <header>
-                                        <h2>Methane Time Series Analysis</h2>
-                                        <p>Analyze and predict methane concentrations using LSTM and Nixtla models</p>
-                                    </header>
+        <!-- Main -->
+        <section id="main">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="content">
+                            <article class="box page-content" style="margin-top: -96px;">
+                                <header>
+                                    <h2>Methane Time Series Analysis</h2>
+                                    <p>Analyze and predict methane concentrations using LSTM and Nixtla models</p>
+                                </header>
 
-                                    <section>
-                                        <div class="instructions">
-                                            <h3>How to use:</h3>
-                                            <ol>
-                                                <li>Use the rectangle tool to select an area on the map</li>
-                                                <li>Choose start and end dates for the analysis period</li>
-                                                <li>Click "Analyze Selected Area" to process methane data</li>
-                                            </ol>
+                                <section>
+                                    <div class="instructions">
+                                        <h3>How to use:</h3>
+                                        <ol>
+                                            <li>Use the rectangle tool to select an area on the map</li>
+                                            <li>Choose start and end dates for the analysis period</li>
+                                            <li>Click "Analyze Selected Area" to process methane data</li>
+                                        </ol>
+                                    </div>
+
+                                    <div id="map" style="width: 100%; height: 400px; margin: 20px 0;"></div>
+
+                                    <div class="date-pickers">
+                                        <div class="date-input">
+                                            <label for="start-date">Start Date:</label>
+                                            <input type="text" id="start-date" placeholder="Select start date">
                                         </div>
-
-                                        <div id="map" style="width: 100%; height: 400px; margin: 20px 0;"></div>
-
-                                        <div class="date-pickers">
-                                            <div class="date-input">
-                                                <label for="start-date">Start Date:</label>
-                                                <input type="text" id="start-date" placeholder="Select start date">
-                                            </div>
-                                            <div class="date-input">
-                                                <label for="end-date">End Date:</label>
-                                                <input type="text" id="end-date" placeholder="Select end date">
-                                            </div>
+                                        <div class="date-input">
+                                            <label for="end-date">End Date:</label>
+                                            <input type="text" id="end-date" placeholder="Select end date">
                                         </div>
+                                    </div>
 
-                                        <button id="analyze-button" disabled class="button">Analyze Selected Area</button>
+                                    <button id="analyze-button" disabled class="button">Analyze Selected Area</button>
 
-                                        <div id="loader" class="hidden">
-                                            <div class="spinner"></div>
-                                            <p>Processing data...</p>
+                                    <div id="loader" class="hidden">
+                                        <div class="spinner"></div>
+                                        <p>Processing data...</p>
+                                    </div>
+
+                                    <div id="process-status"></div>
+                                    <div id="results"></div>
+                                    <div id="plot"></div>
+                                    <div id="conclusionSection" class="box" style="display: none;">
+                                        <h3>Analysis Conclusion</h3>
+                                        <div id="conclusionLoader" class="section" style="display: none;">
+                                            <p>Analyzing data... Please wait</p>
                                         </div>
+                                        <div id="conclusionText" class="section">
+                                        </div>
+                                    </div>
+                                    <a id="download-link" style="display: none;" class="button">Download Raw Data
+                                        (CSV)</a>
+                                </section>
+                            </article>
 
-                                        <div id="process-status"></div>
-                                        <div id="results"></div>
-                                        <div id="plot"></div>
-                                        <a id="download-link" style="display: none;" class="button">Download Raw Data (CSV)</a>
-                                    </section>
-                                </article>
-                                
-                            </div>
                         </div>
                     </div>
                 </div>
-            </section>
-            
-        </div>
+            </div>
+        </section>
 
-        <!-- Scripts -->
-        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-        <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    </div>
 
-        <script>
-            let map;
-            let drawnItems;
-            let selectedArea;
+    <!-- Scripts -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-            document.addEventListener('DOMContentLoaded', function () {
-                initMap();
-                initDatePickers();
+    <script>
+        let map;
+        let drawnItems;
+        let selectedArea;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            initMap();
+            initDatePickers();
+        });
+
+        function initMap() {
+            map = L.map('map').setView([0, 0], 3);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            drawnItems = new L.FeatureGroup();
+            map.addLayer(drawnItems);
+
+            var drawControl = new L.Control.Draw({
+                draw: {
+                    polygon: false,
+                    polyline: false,
+                    circle: false,
+                    circlemarker: false,
+                    marker: false,
+                    rectangle: {
+                        shapeOptions: {
+                            color: '#4a83ec',
+                            weight: 2
+                        }
+                    }
+                },
+                edit: {
+                    featureGroup: drawnItems,
+                    remove: true
+                }
+            });
+            map.addControl(drawControl);
+
+            map.on(L.Draw.Event.CREATED, function (e) {
+                var layer = e.layer;
+                drawnItems.clearLayers();
+                drawnItems.addLayer(layer);
+                selectedArea = layer;
+                document.getElementById('analyze-button').disabled = false;
             });
 
-            function initMap() {
-                map = L.map('map').setView([0, 0], 3);
+            map.on('draw:deleted', function () {
+                selectedArea = null;
+                document.getElementById('analyze-button').disabled = true;
+            });
+        }
 
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                }).addTo(map);
+        function initDatePickers() {
+            const defaultStartDate = new Date();
+            defaultStartDate.setMonth(defaultStartDate.getMonth() - 1);
 
-                drawnItems = new L.FeatureGroup();
-                map.addLayer(drawnItems);
+            flatpickr("#start-date", {
+                dateFormat: "Y-m-d",
+                defaultDate: defaultStartDate,
+                maxDate: "today",
+                onChange: validateDates
+            });
 
-                var drawControl = new L.Control.Draw({
-                    draw: {
-                        polygon: false,
-                        polyline: false,
-                        circle: false,
-                        circlemarker: false,
-                        marker: false,
-                        rectangle: {
-                            shapeOptions: {
-                                color: '#4a83ec',
-                                weight: 2
-                            }
-                        }
-                    },
-                    edit: {
-                        featureGroup: drawnItems,
-                        remove: true
-                    }
-                });
-                map.addControl(drawControl);
+            flatpickr("#end-date", {
+                dateFormat: "Y-m-d",
+                defaultDate: "today",
+                maxDate: "today",
+                onChange: validateDates
+            });
+        }
 
-                map.on(L.Draw.Event.CREATED, function (e) {
-                    var layer = e.layer;
-                    drawnItems.clearLayers();
-                    drawnItems.addLayer(layer);
-                    selectedArea = layer;
-                    document.getElementById('analyze-button').disabled = false;
-                });
+        function validateDates(selectedDates, dateStr, instance) {
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
 
-                map.on('draw:deleted', function () {
-                    selectedArea = null;
-                    document.getElementById('analyze-button').disabled = true;
-                });
-            }
-
-            function initDatePickers() {
-                const defaultStartDate = new Date();
-                defaultStartDate.setMonth(defaultStartDate.getMonth() - 1);
-
-                flatpickr("#start-date", {
-                    dateFormat: "Y-m-d",
-                    defaultDate: defaultStartDate,
-                    maxDate: "today",
-                    onChange: validateDates
-                });
-
-                flatpickr("#end-date", {
-                    dateFormat: "Y-m-d",
-                    defaultDate: "today",
-                    maxDate: "today",
-                    onChange: validateDates
-                });
-            }
-
-            function validateDates(selectedDates, dateStr, instance) {
-                const startDate = document.getElementById('start-date').value;
-                const endDate = document.getElementById('end-date').value;
-
-                if (startDate && endDate) {
-                    if (new Date(endDate) < new Date(startDate)) {
-                        alert('End date cannot be before start date');
-                        instance.clear();
-                    }
+            if (startDate && endDate) {
+                if (new Date(endDate) < new Date(startDate)) {
+                    alert('End date cannot be before start date');
+                    instance.clear();
                 }
             }
+        }
 
-            function displayError(message) {
-                const resultsDiv = document.getElementById('results');
-                resultsDiv.innerHTML = `
+        function displayError(message) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
                     <div class="error-message">
                         <p>⚠️ ${message}</p>
                     </div>
                 `;
+        }
+
+        function updateStatus(message) {
+            const statusDiv = document.getElementById('process-status');
+            statusDiv.innerHTML += `<div class="status-message">${message}</div>`;
+        }
+
+        document.getElementById('analyze-button').addEventListener('click', function () {
+            if (!selectedArea) {
+                alert('Please select an area on the map first.');
+                return;
             }
 
-            function updateStatus(message) {
-                const statusDiv = document.getElementById('process-status');
-                statusDiv.innerHTML += `<div class="status-message">${message}</div>`;
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+
+            if (!startDate || !endDate) {
+                alert('Please select both start and end dates.');
+                return;
             }
 
-            document.getElementById('analyze-button').addEventListener('click', function () {
-                if (!selectedArea) {
-                    alert('Please select an area on the map first.');
-                    return;
-                }
+            // Clear previous results
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('plot').innerHTML = '';
+            document.getElementById('process-status').innerHTML = '';
+            document.getElementById('download-link').style.display = 'none';
 
-                const startDate = document.getElementById('start-date').value;
-                const endDate = document.getElementById('end-date').value;
+            // Disable the analyze button
+            document.getElementById('analyze-button').disabled = true;
 
-                if (!startDate || !endDate) {
-                    alert('Please select both start and end dates.');
-                    return;
-                }
+            // Show loader
+            document.getElementById('loader').classList.remove('hidden');
+            updateStatus('Fetching methane data...');
 
-                // Clear previous results
-                document.getElementById('results').innerHTML = '';
-                document.getElementById('plot').innerHTML = '';
-                document.getElementById('process-status').innerHTML = '';
-                document.getElementById('download-link').style.display = 'none';
+            // Get bounds
+            const bounds = selectedArea.getBounds();
+            const ne = bounds.getNorthEast();
+            const sw = bounds.getSouthWest();
 
-                // Disable the analyze button
-                document.getElementById('analyze-button').disabled = true;
+            const data = {
+                bounds: [sw.lng, sw.lat, ne.lng, ne.lat],
+                start_date: startDate,
+                end_date: endDate
+            };
 
-                // Show loader
-                document.getElementById('loader').classList.remove('hidden');
-                updateStatus('Fetching methane data...');
-
-                // Get bounds
-                const bounds = selectedArea.getBounds();
-                const ne = bounds.getNorthEast();
-                const sw = bounds.getSouthWest();
-
-                const data = {
-                    bounds: [sw.lng, sw.lat, ne.lng, ne.lat],
-                    start_date: startDate,
-                    end_date: endDate
-                };
-
-                fetch('/api/get_methane_data', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data),
+            fetch('/api/get_methane_data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'error') {
+                        throw new Error(data.message);
+                    }
+                    document.getElementById('download-link').style.display = 'inline-block';
+                    document.getElementById('download-link').href = '/api/download_csv';
+                    updateStatus('Methane data fetched. Analyzing with LSTM and Nixtla models...');
+                    return fetch('/api/analyze_data', { method: 'POST' });
                 })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'error') {
-                            throw new Error(data.message);
-                        }
-                        document.getElementById('download-link').style.display = 'inline-block';
-                        document.getElementById('download-link').href = '/api/download_csv';
-                        updateStatus('Methane data fetched. Analyzing with LSTM and Nixtla models...');
-                        return fetch('/api/analyze_data', { method: 'POST' });
-                    })
-                    .then(response => response.json())
-                    .then(results => {
-                        if (results.status === 'error') {
-                            throw new Error(results.message);
-                        }
+                .then(response => response.json())
+                .then(results => {
+                    if (results.status === 'error') {
+                        throw new Error(results.message);
+                    }
 
-                        // Hide loader
-                        document.getElementById('loader').classList.add('hidden');
+                    // Hide loader
+                    document.getElementById('loader').classList.add('hidden');
 
-                        // Display the plot
-                        if (results.plot_json) {
-                            Plotly.newPlot('plot', JSON.parse(results.plot_json));
-                        }
+                    // Display the plot
+                    if (results.plot_json) {
+                        Plotly.newPlot('plot', JSON.parse(results.plot_json));
+                    }
 
-                        let resultsDiv = document.getElementById('results');
-                        resultsDiv.innerHTML = `
+
+                    let resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = `
                             <div class="analysis-results">
                                 <h2>Analysis Results</h2>
                                 <p class="forecast-info">Forecasting from: ${results.latest_historical_date}</p>
@@ -309,19 +381,59 @@
                             </div>
                         `;
 
-                        updateStatus('Analysis complete! Compare LSTM and Nixtla forecasts above.');
-                    })
-                    .catch((error) => {
-                        console.error('Error:', error);
-                        document.getElementById('loader').classList.add('hidden');
-                        displayError(`Error occurred: ${error.message}`);
-                    })
-                    .finally(() => {
-                        // Re-enable the analyze button
-                        document.getElementById('analyze-button').disabled = false;
-                    });
-            });
-        </script>
-        {{ chat_widget()|safe }}
-    </body>
+                    updateStatus('Analysis complete! Compare LSTM and Nixtla forecasts above.');
+                    generateTimeSeriesConclusion(results);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    document.getElementById('loader').classList.add('hidden');
+                    displayError(`Error occurred: ${error.message}`);
+                })
+                .finally(() => {
+                    // Re-enable the analyze button
+                    document.getElementById('analyze-button').disabled = false;
+                });
+        });
+        async function generateTimeSeriesConclusion(results) {
+            try {
+                // Show loader
+                document.getElementById('conclusionSection').style.display = 'block';
+                document.getElementById('conclusionLoader').style.display = 'block';
+                document.getElementById('conclusionText').style.display = 'none';
+
+                const response = await fetch('/generate_time_series_conclusion', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(results)
+                });
+
+                // Hide loader
+                document.getElementById('conclusionLoader').style.display = 'none';
+                document.getElementById('conclusionText').style.display = 'block';
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    document.getElementById('conclusionText').innerHTML = `
+                <p>${data.conclusion}</p>
+            `;
+                } else {
+                    throw new Error(data.message || 'Failed to generate conclusion');
+                }
+            } catch (error) {
+                document.getElementById('conclusionText').innerHTML = `
+            <p class="error">Unable to generate conclusion: ${error.message}</p>
+        `;
+            }
+        }
+    </script>
+    {{ chat_widget()|safe }}
+</body>
+
 </html>
