@@ -15,7 +15,7 @@ from nixtla import NixtlaClient
 import plotly
 import plotly.graph_objs as go
 import json
-
+from bot_handler import BotHandler  # Add this import at the top of routes.py
 # Configure logging
 logger = logging.getLogger(__name__)
 
@@ -84,10 +84,11 @@ def save_analysis_results_to_json(results, output_dir='templates/assets/results'
         raise
 
 def register_routes(app):
+
     @app.route('/')
     def index():
         return render_template('index.html')
-
+    
     @app.route('/methane')
     def methane():
         return render_template('methane.html')
