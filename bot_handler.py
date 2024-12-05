@@ -2,6 +2,7 @@ import os
 from openai import OpenAI
 from dotenv import load_dotenv
 import logging
+
 # Initialize logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -120,8 +121,8 @@ class BotHandler:
             Please provide:
             1. Analysis of the predicted trends
             2. Comparison between LSTM and Nixtla predictions
-            3. Assessment of model performance
-            4. Key insights about future methane levels"""
+            4. Key insights about future methane levels
+            Important : dont add extra information information should be clear and to the point, answer should be in paragraph format and in plain text format"""
 
             response = self.client.chat.completions.create(
                 model="gpt-4-turbo-preview",
@@ -160,13 +161,15 @@ class BotHandler:
             Geographic Coverage:
             - Latitude Range: {analysis_results['coordinates']['min_lat']:.4f}° to {analysis_results['coordinates']['max_lat']:.4f}°
             - Longitude Range: {analysis_results['coordinates']['min_lon']:.4f}° to {analysis_results['coordinates']['max_lon']:.4f}°
-            - talk which place can it be 
+            - mention the place as per the coordinates
             
             Please provide:
             1. Assessment of methane concentration levels
             2. Potential environmental implications
             3. Whether these levels warrant attention
-            4. Any notable patterns or hotspots"""
+            4. Any notable patterns or hotspots
+
+            Important : dont add extra information information should be clear and to the point, answer should be in paragraph format and in plain text format"""
 
             response = self.client.chat.completions.create(
                 model="gpt-4-turbo-preview",
@@ -174,7 +177,7 @@ class BotHandler:
                     {"role": "system", "content": self.system_prompt},
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.7
+                temperature=0.7,
             )
             
             return {
