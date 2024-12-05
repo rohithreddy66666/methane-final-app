@@ -515,6 +515,10 @@
                 }
             }
         });
+        function toggleNav() {
+  document.getElementById('nav').classList.toggle('active');
+  document.querySelector('.nav-toggle').classList.toggle('active');
+}
     </script>
     {{ chat_widget()|safe }}
 </body>
