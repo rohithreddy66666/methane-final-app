@@ -128,9 +128,77 @@ python app.py
 
 ## Deployment
 
+## Deployment
+
 ### Local Development
 ```bash
 flask run --debug
+```
+
+### Docker Deployment
+1. Build the Docker image:
+```bash
+docker build -t methane-analysis-app .
+```
+
+2. Run the container:
+```bash
+docker run -d \
+  -p 5000:5000 \
+  -e EARTHDATA_USERNAME=your_username \
+  -e EARTHDATA_PASSWORD=your_password \
+  -e OPENAI_API_KEY=your_openai_key \
+  -e NIXTLA_API_KEY=your_nixtla_key \
+  methane-analysis-app
+```
+
+#### Docker Environment Setup
+- Ensure Docker is installed on your system
+- The application uses Python 3.9 base image
+- All dependencies are automatically installed during build
+- Application runs on port 5000 by default
+- Data persistence can be achieved by mounting volumes:
+```bash
+docker run -d \
+  -p 5000:5000 \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/uploads:/app/uploads \
+  -v $(pwd)/templates/assets/results:/app/templates/assets/results \
+  -e EARTHDATA_USERNAME=your_username \
+  -e EARTHDATA_PASSWORD=your_password \
+  -e OPENAI_API_KEY=your_openai_key \
+  -e NIXTLA_API_KEY=your_nixtla_key \
+  methane-analysis-app
+```
+
+#### Docker Compose (Optional)
+Create a `docker-compose.yml` for easier deployment:
+```yaml
+version: '3.8'
+services:
+  methane-app:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+      - ./templates/assets/results:/app/templates/assets/results
+    environment:
+      - EARTHDATA_USERNAME=${EARTHDATA_USERNAME}
+      - EARTHDATA_PASSWORD=${EARTHDATA_PASSWORD}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - NIXTLA_API_KEY=${NIXTLA_API_KEY}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/status"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+```
+
+Then run with:
+```bash
+docker-compose up -d
 ```
 
 ### Production Deployment (EC2)
