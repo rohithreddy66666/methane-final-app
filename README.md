@@ -135,6 +135,13 @@ python app.py
 flask run --debug
 ```
 
+## Deployment
+
+### Local Development
+```bash
+flask run --debug
+```
+
 ### Docker Deployment
 1. Build the Docker image:
 ```bash
@@ -203,10 +210,66 @@ docker-compose up -d
 
 ### Production Deployment (EC2)
 1. Set up EC2 instance
-2. Install dependencies
-3. Configure environment variables
-4. Set up reverse proxy (nginx recommended)
-5. Use systemd for service management
+2. Install dependencies and activate virtual environment:
+```bash
+python -m venv myenv
+source myenv/bin/activate
+pip install -r requirements.txt
+```
+
+3. Configure environment variables:
+```bash
+export EARTHDATA_USERNAME=your_username
+export EARTHDATA_PASSWORD=your_password
+export OPENAI_API_KEY=your_key
+export NIXTLA_API_KEY=your_key
+```
+
+4. Run with nohup:
+```bash
+# Start the application
+nohup python app.py > app.log 2>&1 &
+
+# To check the process
+ps aux | grep python
+
+# To view logs
+tail -f app.log
+
+# To stop the application
+kill $(ps aux | grep 'python app.py' | grep -v grep | awk '{print $2}')
+```
+
+#### Additional nohup Configuration
+- Create a startup script (start.sh):
+```bash
+#!/bin/bash
+source myenv/bin/activate
+export EARTHDATA_USERNAME=your_username
+export EARTHDATA_PASSWORD=your_password
+export OPENAI_API_KEY=your_key
+export NIXTLA_API_KEY=your_key
+nohup python app.py > app.log 2>&1 &
+echo $! > app.pid
+```
+
+- Create a shutdown script (stop.sh):
+```bash
+#!/bin/bash
+kill $(cat app.pid)
+rm app.pid
+```
+
+Make scripts executable:
+```bash
+chmod +x start.sh stop.sh
+```
+
+Now you can use:
+```bash
+./start.sh  # To start the application
+./stop.sh   # To stop the application
+```
 
 ## Data Sources
 * NASA EMIT mission data
