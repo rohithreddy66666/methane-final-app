@@ -267,19 +267,11 @@ Now you can use:
 * Sentinel-5P TROPOMI CH4 measurements
 * Earth Engine datasets
 
-## Model Information
-* STARCOP MAG1C algorithm for plume detection
-* LSTM neural network for time series forecasting
-* Nixtla TimeGPT for comparative forecasting
-
 ## Contributing
 1. Fork the repository
 2. Create a feature branch
 3. Commit changes
 4. Create pull request
-
-## License
-MIT License
 
 ## Acknowledgments
 * NASA JPL for EMIT data
