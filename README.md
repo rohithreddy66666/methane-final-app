@@ -128,15 +128,6 @@ python app.py
 
 ## Deployment
 
-## Deployment
-
-### Local Development
-```bash
-flask run --debug
-```
-
-## Deployment
-
 ### Local Development
 ```bash
 flask run --debug
