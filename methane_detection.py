@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from georeader.readers import emit
 from starcop.models import mag1c_emit
-from huggingface_hub import hf_hub_download
 import torch
 import omegaconf
 import starcop
@@ -21,6 +20,7 @@ import pytorch_lightning as pl
 pl.seed_everything(42)  # For reproducibility
 import torch
 torch.set_grad_enabled(False) 
+
 # Initialize logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -42,10 +42,12 @@ class ModelCache:
             cls._instance = ModelCache()
         return cls._instance
 
-    def get_model(self, experiment_name="hyperstarcop_mag1c_rgb", model_folder="methane-models"):
+    def get_model(self, model_path, config_path):
+        """Load model from local path"""
         if self._model is None:
-            config_file, model_file = download_model_files(experiment_name, model_folder)
-            self._model, self._config = load_model_with_emit(model_file, config_file)
+            logger.info("Loading model from local path...")
+            self._model, self._config = load_model_with_emit(model_path, config_path)
+            logger.info("Model loaded and cached successfully")
         return self._model, self._config
 
 def download_emit_data(url, output_dir):
@@ -69,70 +71,31 @@ def download_emit_data(url, output_dir):
         raise Exception(f"Error downloading data: {str(e)}")
 
 def load_model_with_emit(model_path, config_path):
-    """Load the UNET MODEL with version compatibility handling"""
+    """Load the UNET MODEL from local path"""
     try:
         config_general = omegaconf.OmegaConf.load(os.path.join(os.path.dirname(os.path.abspath(starcop.__file__)), 'config.yaml'))
         config_model = omegaconf.OmegaConf.load(config_path)
         config = omegaconf.OmegaConf.merge(config_general, config_model)
 
-        # Try loading with version handling
-        try:
-            model = ModelModule.load_from_checkpoint(
-                model_path, 
-                settings=config,
-                strict=False
-            )
-        except Exception as e:
-            logger.warning(f"Standard loading failed, trying alternative method: {str(e)}")
-            checkpoint = torch.load(model_path, map_location=torch.device('cpu'))
-            model = ModelModule(settings=config)
-            model.load_state_dict(checkpoint['state_dict'], strict=False)
+        checkpoint = torch.load(model_path, map_location=torch.device('cpu'))
+        
+        if 'state_dict' in checkpoint:
+            state_dict = checkpoint['state_dict']
+        else:
+            state_dict = checkpoint
 
+        model = ModelModule(settings=config)
+        model.load_state_dict(state_dict, strict=False)
         model.to(torch.device("cpu"))
         model.eval()
 
         logger.info(f"Model loaded successfully with {model.num_channels} input channels")
         return model, config
-        
     except Exception as e:
-        raise Exception(f"Error loading model: {str(e)}")
+        logger.error(f"Error loading model: {str(e)}")
+        raise
 
-def download_model_files(experiment_name, model_folder):
-    """Download model files from Hugging Face"""
-    try:
-        os.makedirs(model_folder, exist_ok=True)
-        subfolder_local = f"models/{experiment_name}"
-        
-        config_file = os.path.join(model_folder, "config.yaml")
-        model_file = os.path.join(model_folder, "final_checkpoint_model.ckpt")
-        
-        if not os.path.exists(config_file):
-            logger.info("Downloading config file...")
-            config_file = hf_hub_download(
-                repo_id="isp-uv-es/starcop", 
-                subfolder=subfolder_local, 
-                filename="config.yaml",
-                local_dir=model_folder, 
-                local_dir_use_symlinks=False,
-                resume_download=True
-            )
-        
-        if not os.path.exists(model_file):
-            logger.info("Downloading model file...")
-            model_file = hf_hub_download(
-                repo_id="isp-uv-es/starcop", 
-                subfolder=subfolder_local,
-                filename="final_checkpoint_model.ckpt",
-                local_dir=model_folder, 
-                local_dir_use_symlinks=False,
-                resume_download=True
-            )
-        
-        return config_file, model_file
-    except Exception as e:
-        raise Exception(f"Error downloading model files: {str(e)}")
-
-def process_emit_data(emit_id, output_dir="static/results"):
+def process_emit_data(emit_id, model_path, config_path, output_dir="static/results"):
     """Main function to process EMIT data and detect methane"""
     product = None
     try:
@@ -179,9 +142,9 @@ def process_emit_data(emit_id, output_dir="static/results"):
         mfoutput, albedo = mag1c_emit.mag1c_emit(rst, column_step=2, georreferenced=False)
 
         # Load model using cache
-        logger.info("Loading STARCOP model...")
+        logger.info("Loading local STARCOP model...")
         model_cache = ModelCache.get_instance()
-        hsi_model, hsi_config = model_cache.get_model()
+        hsi_model, hsi_config = model_cache.get_model(model_path, config_path)
 
         # Normalize data
         MAGIC_DIV_BY, RGB_DIV_BY = 240., 20.
@@ -209,7 +172,6 @@ def process_emit_data(emit_id, output_dir="static/results"):
         plt.close('all')
         fig, ax = plt.subplots(2, 2, figsize=(20, 20))
 
-        # Plot sections
         # RGB plot
         rgbgeomask = np.any(rgbgeo.values == -1, axis=0, keepdims=False)
         rgbplot = (rgbgeo / 12).clip(0, 1)
@@ -297,89 +259,14 @@ def process_emit_data(emit_id, output_dir="static/results"):
     finally:
         plt.close('all')
 
-class ModelCache:
-    _instance = None
-    _model = None
-    _config = None
-
-    @classmethod
-    def get_instance(cls):
-        if cls._instance is None:
-            cls._instance = ModelCache()
-        return cls._instance
-
-    def get_model(self, experiment_name="hyperstarcop_mag1c_rgb", model_folder="methane-models"):
-        if self._model is None:
-            logger.info("Loading model for the first time...")
-            config_file, model_file = download_model_files(experiment_name, model_folder)
-            self._model, self._config = load_model_with_emit(model_file, config_file)
-            logger.info("Model loaded and cached successfully")
-        return self._model, self._config
-
-def load_model_with_emit(model_path, config_path):
-    """Load the UNET MODEL with better version handling"""
-    try:
-        config_general = omegaconf.OmegaConf.load(os.path.join(os.path.dirname(os.path.abspath(starcop.__file__)), 'config.yaml'))
-        config_model = omegaconf.OmegaConf.load(config_path)
-        config = omegaconf.OmegaConf.merge(config_general, config_model)
-
-        checkpoint = torch.load(model_path, map_location=torch.device('cpu'))
-        
-        # Handle both legacy and new model formats
-        if 'state_dict' in checkpoint:
-            state_dict = checkpoint['state_dict']
-        else:
-            state_dict = checkpoint
-
-        model = ModelModule(settings=config)
-        model.load_state_dict(state_dict, strict=False)
-        model.to(torch.device("cpu"))
-        model.eval()
-
-        logger.info(f"Model loaded successfully with {model.num_channels} input channels")
-        return model, config
-    except Exception as e:
-        logger.error(f"Error loading model: {str(e)}")
-        raise
-
-def download_model_files(experiment_name, model_folder):
-    """Download model files with better caching"""
-    try:
-        os.makedirs(model_folder, exist_ok=True)
-        subfolder_local = f"models/{experiment_name}"
-        
-        config_file = os.path.join(model_folder, "config.yaml")
-        model_file = os.path.join(model_folder, "final_checkpoint_model.ckpt")
-        
-        # Add force_download=True to ensure fresh downloads
-        if not os.path.exists(config_file):
-            logger.info("Downloading config file...")
-            config_file = hf_hub_download(
-                repo_id="isp-uv-es/starcop", 
-                subfolder=subfolder_local, 
-                filename="config.yaml",
-                local_dir=model_folder,
-                force_download=True
-            )
-        
-        if not os.path.exists(model_file):
-            logger.info("Downloading model file...")
-            model_file = hf_hub_download(
-                repo_id="isp-uv-es/starcop", 
-                subfolder=subfolder_local,
-                filename="final_checkpoint_model.ckpt",
-                local_dir=model_folder,
-                force_download=True
-            )
-        
-        return config_file, model_file
-    except Exception as e:
-        logger.error(f"Error downloading model files: {str(e)}")
-        raise
 if __name__ == "__main__":
     try:
+        # Example usage
         test_id = "EMIT_L1B_RAD_001_20240326T214529_2408614_001"
-        results = process_emit_data(test_id)
+        local_model_path = "path/to/your/model.ckpt"  # Replace with your local model path
+        local_config_path = "path/to/your/config.yaml"  # Replace with your local config path
+        
+        results = process_emit_data(test_id, local_model_path, local_config_path)
         print("\nResults:")
         print(json.dumps(results, indent=2))
     except Exception as e:
